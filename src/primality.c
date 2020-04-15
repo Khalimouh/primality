@@ -39,7 +39,6 @@ void random_a(mpz_t a, mpz_t n, int seed){
 	// Initialiser
 	gmp_randstate_t state;
 	gmp_randinit_default(state);
-	gmp_printf("%Zd N\n",n);
 
 	// seed
 	gmp_randseed_ui(state, (unsigned int)time(0) + seed);
@@ -51,8 +50,9 @@ void random_a(mpz_t a, mpz_t n, int seed){
 	//
 	mpz_urandomm(a, state, n);
 	mpz_add_ui(a,a,2);
-	gmp_printf("%Zd RAndom\n",a);
 
+	//
+	mpz_add_ui(n,n,3);
 	// Free memory
 	gmp_randclear(state);
 }
@@ -75,24 +75,25 @@ int fermat_test(mpz_t n, int k){
 		// Calculer a = a^n-1 mod n
 		square_and_multiply(a, n, H);
 		// Verifier resultat
-		gmp_printf("%Zd\n",a);
+		if(mpz_sgn(a) != 1) 
+			return 0;
 	}
 
 	//free memory
 	mpz_clear(a);
 	mpz_clear(n_1);
 
-	return 0;
+	return 1;
 }
 
-int	main()
+int main(int argc, char const *argv[])
 {	
 	//a^exp mod n
 	// Initialisation des variables
 	mpz_t n;
 	//mpz_init_set_str(a, "15", 10);
 	//mpz_init_set_str(exp, "532", 10);
-	mpz_init_set_str(n, "193", 10);
+	mpz_init_set_str(n, argv[1], 10);
 
 	//random_a(n, a);
 	// Conversion de l'exposant en binaire
@@ -103,8 +104,9 @@ int	main()
 
 	// 
 	//gmp_printf("%Zd\n", a);
-	fermat_test(n, 3);
-
+	if(fermat_test(n, atoi(argv[2])))
+			printf("Oui\n");
+	else	printf("Non\n");
 	// Free memory
 	//free(H);
 	//mpz_clear(a);
