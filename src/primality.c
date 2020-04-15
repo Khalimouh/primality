@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gmp.h>
-
+#include <time.h>
 
 /*
 	Algorithme Square and multiply
@@ -35,15 +35,14 @@ void square_and_multiply(mpz_t R, mpz_t n, char * H){
 	mpz_clear(Ri);
 }
 
-void random_a(mpz_t a, mpz_t n){
+void random_a(mpz_t a, mpz_t n, int seed){
 	// Initialiser
 	gmp_randstate_t state;
 	gmp_randinit_default(state);
 	gmp_printf("%Zd N\n",n);
 
 	// seed
-	gmp_randseed_ui(state, 1234567890);
-
+	gmp_randseed_ui(state, (unsigned int)time(0) + seed);
 	/* Pour générer un entier a tel que  1 <  a  <= N-1
 	 * Il faut génerer un nombre aléatoire entre [0, N-3]
 	 * et ajouter 2 au résultat.
@@ -69,14 +68,14 @@ int fermat_test(mpz_t n, int k){
 	// Convertir exposant en binaire
 	char * H = mpz_get_str(NULL, 2, n_1);
 
-	for (int i = 1; i < k; i++)
+	for (int i = 0; i < k; i++)
 	{	
 		// Générer un entier a aléatoirement
-		random_a(a, n);
+		random_a(a, n, i);
 		// Calculer a = a^n-1 mod n
 		square_and_multiply(a, n, H);
 		// Verifier resultat
-		//gmp_printf("%Zd\n",a);
+		gmp_printf("%Zd\n",a);
 	}
 
 	//free memory
