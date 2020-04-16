@@ -75,8 +75,10 @@ int fermat_test(mpz_t n, int k){
 		// Calculer a = a^n-1 mod n
 		square_and_multiply(a, n, H);
 		// Verifier resultat
-		if(mpz_sgn(a) != 1) 
+		// retourner 0 si a == 1
+		if( mpz_cmp_ui(a, 1) != 0) {
 			return 0;
+		} 
 	}
 
 	//free memory
