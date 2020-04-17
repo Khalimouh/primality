@@ -43,13 +43,13 @@ void random_a(mpz_t a, mpz_t n, int seed, int min, int max){
 	 * Il faut génerer un nombre aléatoire entre [min, N-(min-max)]
 	 * et ajouter min au résultat.
 	*/
-	mpz_sub_ui( n, n, min-max);
+	mpz_sub_ui( n, n, min-max+1);
 	//
 	mpz_urandomm( a, state, n);
-	mpz_add_ui( a, a, min);
+	mpz_add_ui( a, a, min+1);
 
 	//
-	mpz_add_ui( n, n, min-max);
+	mpz_add_ui( n, n, min-max+1);
 	// Free memory
 	gmp_randclear(state);
 }
@@ -91,10 +91,10 @@ int miller_rabin_test ( mpz_t n, int k)	{
 		mpz_mod_ui ( mod, t, 2);
 	}while ( !mpz_cmp_ui ( mod, 0));	
 	
-	mpz_sub_ui ( s_1, s, 1);
+//	mpz_sub_ui ( s_1, s, 1);
 	gmp_printf("n - 1 = 2^(%Zd) x %Zd\n", s, t);
 	char * H = mpz_get_str(NULL, 2, t);
-	for (int i = 1; i <= k; i++)	{
+	for (int i = 1; i < (k+1); i++)	{
 		printf ("Pour i = %d\n", i);
 		random_a(a, n, i, 0, 0);
 		gmp_printf ( "\tChoisir un nombre a = %Zd\n", a);
@@ -102,20 +102,25 @@ int miller_rabin_test ( mpz_t n, int k)	{
 		square_and_multiply ( y, n, H);
 
 		mpz_add_ui ( _mod, y, 1);
-			gmp_printf ( "\t y = %Zd mod %Zd = %Zd\n", y, n, _mod);
-		if ( mpz_cmp_si ( y, 1) && mpz_cmp (_mod, n))	{
+		mpz_mod ( _mod, _mod, n);
+		gmp_printf ( "\t y = %Zd mod %Zd / -1 mod n =  %Zd\n", y, n, _mod);
+		if ( mpz_cmp_si ( y, 1) && mpz_cmp_ui (_mod, 0))	{
 			mpz_set_ui ( j, 1);
 			bool = 1;
 			gmp_printf ( "\t Pour j = %Zd < %Zd\n", j, s);
-			while ( mpz_cmp ( j, s) <= 0 && bool)	{
-				mpz_set ( y2, y);
-				square_and_multiply ( y2, n, "10\0");
-				gmp_printf ( "\t\t y2 = %Zd mod %Zd\n", y2, n);
-				if ( mpz_cmp_ui ( y2, 1))	{
+			while ( (mpz_cmp ( j, s) < 1) && bool)	{
+				//mpz_set ( y2, y);
+				square_and_multiply ( y, n, "10\0");				
+				gmp_printf ( "\t\t y2 = %Zd mod %Zd\n", y, n);
+				
+				mpz_add_ui ( _mod, y, 1);
+				mpz_mod ( _mod, _mod, n);
+				gmp_printf ( "\t\t -1 mod n ? = %Zd et y = %Zd\n", _mod, y);
+				if ( !mpz_cmp_ui ( y, 1))	{
 					mpz_clears ( s, t, y, a, mod, j, s_1, y2, (mpz_ptr)NULL);
 					return 0;
 				}
-				if ( mpz_cmp_si ( y2, -1)) bool = 0;;
+				if ( !mpz_cmp_ui ( _mod, 0)) bool = 0;
 				mpz_add_ui ( j, j, 1); 
 			} 
 			if ( bool)	{
