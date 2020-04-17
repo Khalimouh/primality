@@ -33,12 +33,13 @@ void square_and_multiply(mpz_t R, mpz_t n, char * H){
 }
 
 void random_a(mpz_t a, mpz_t n, int seed, int min, int max){
-	// Initialiser
+	// Initialiser le générateur des nombres aléatoires.
 	gmp_randstate_t state;
 	gmp_randinit_default( state);
 
 	// seed
 	gmp_randseed_ui( state, (unsigned int)time(0) + seed);
+	
 	/* Pour générer un entier a tel que  min <  a  < max (N+max)
 	 * Il faut génerer un nombre aléatoire entre [min, N-(min-max)]
 	 * et ajouter min au résultat.
@@ -55,26 +56,46 @@ void random_a(mpz_t a, mpz_t n, int seed, int min, int max){
 }
 
 int fermat_test(mpz_t n, int k){
+	int is_pseudo_premier = 0;
 	// Initialisation des variables
 	mpz_t a;
 	mpz_t n_1;
 	mpz_inits(a, n_1, (mpz_ptr)NULL);
 	
-	mpz_sub_ui(n_1, n, 1);					// Calculer N-1 = exposant
-	char * H = mpz_get_str(NULL, 2, n_1);	// Convertir exposant en binaire
+	// Calculer N-1 = exposant
+	mpz_sub_ui(n_1, n, 1);	
+	// Convertir exposant (N-1) en binaire				
+	char * H = mpz_get_str(NULL, 2, n_1);	
 
-	for (int i = 0; i < k; i++)	{	
-		random_a(a, n, i, 1, -1);				// Générer un entier a aléatoirement
-		square_and_multiply(a, n, H);			// Calculer a = a^n-1 mod n
-		if( mpz_cmp_ui(a, 1) != 0) {			// Verifier resultat
+	for (int i = 0; i < k; i++)	{
+		// Générer un entier a aléatoirement
+		random_a(a, n, i, 1, -1);	
+		// Calculer a = a^n-1 mod n			
+		square_and_multiply(a, n, H);	
+		// Verifier resultat de a
+		// retourner 0 si a == 1		
+		if( mpz_cmp_ui(a, 1) != 0) {
+			// free memory			
 			mpz_clears(a, n_1, (mpz_ptr)NULL);
-			return 0;								// retourner 0 si a == 1				
-		} 
+			
+			// Verifier s'il est pseudo premier
+			if(is_pseudo_premier){
+				gmp_printf("N = %Zd est pseudo-premier\n", n);
+				return 2; // n est pseudo-premier
+			}
+			else {	
+				gmp_printf("N = %Zd est composé\n", n);
+				return 0; // n est composé.
+			}
+		}
+		is_pseudo_premier = 1;
 	}
 
 	//free memory
 	mpz_clears(a, n_1, (mpz_ptr)NULL);
-	return 1;
+	
+	gmp_printf("N = %Zd est probablement premier\n", n);
+	return 1; // n est probablement premier 
 }
 
 int miller_rabin_test ( mpz_t n, int k)	{
@@ -150,9 +171,9 @@ void fermat ( int argc, char *argv[])	{
 
 	// 
 	//gmp_printf("%Zd\n", a);
-	if(fermat_test(n, atoi(argv[2])))
-			printf("Oui\n");
-	else	printf("Non\n");
+	//if(fermat_test(n, atoi(argv[2])) == 1)
+	//		printf("Oui premier\n");
+	//else	printf("Non\n");
 	// Free memory
 	//free(H);
 	//mpz_clear(a);
@@ -160,11 +181,26 @@ void fermat ( int argc, char *argv[])	{
 	//mpz_clear(exp);	
 }
 
+void checkargs (int argc, int arg_n){
+	if (argc != arg_n){
+		fprintf(stdout, "Liste des commandes Test de primalité:\n\t"
+						"-f [n] [k]: Tester si n est premier pour k fois en utilisant le test de Fermat.\n\t"
+						"-m [n] [k]: Tester si n est premier pour k fois en utilisant le test de Miller-Rabin.\n\t"
+						"-s [n] [exposant] [modulo]: Calculer n^exp mod modulo en utilisant Square and multiply.\n\t"
+						"-g [n]: generer un nombre aléatoire entre 0 et n-1");
+		exit(1);
+	}
+}
+
 int main(int argc, char const *argv[])	{	
 	mpz_t n;
 	mpz_init_set_str ( n, argv[1], 10);
-	printf ("%s : %s\n", 
+	/*printf ("%s : %s\n", 
 			argv[1], 
 			miller_rabin_test ( n, atoi ( argv[2])) ? "Premier\0" : "Composé\0");
+	*/
+	fermat_test(n, atoi(argv[2]));
+
+	mpz_clear(n);
 	return 0;
 }
