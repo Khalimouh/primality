@@ -98,87 +98,71 @@ int fermat_test(mpz_t n, int k){
 	return 1; // n est probablement premier 
 }
 
-int miller_rabin_test ( mpz_t n, int k)	{
-	mpz_t s, t, y, a, mod, _mod, j, s_1, y2;
-	mpz_inits ( s, t, y, a, mod, _mod, j, s_1, y2, (mpz_ptr)NULL);
-	
-	int bool = 1;
+void init_miller_rabin_test ( mpz_t n, mpz_t s, mpz_t t)	{
+
 	mpz_set_ui ( s, 0);
-	mpz_sub_ui ( t, n, 1);
-	
+	mpz_sub_ui ( t, n, 1);	
+}
+
+void odd_decomposition ( mpz_t s, mpz_t t, mpz_t mod)	{
+
 	do	{
 		mpz_add_ui ( s, s, 1);
 		mpz_div_ui ( t, t, 2);
 		mpz_mod_ui ( mod, t, 2);
-	}while ( !mpz_cmp_ui ( mod, 0));	
-	
-//	mpz_sub_ui ( s_1, s, 1);
-	gmp_printf("n - 1 = 2^(%Zd) x %Zd\n", s, t);
-	char * H = mpz_get_str(NULL, 2, t);
-	for (int i = 1; i < (k+1); i++)	{
-		printf ("Pour i = %d\n", i);
-		random_a(a, n, i, 0, 0);
-		gmp_printf ( "\tChoisir un nombre a = %Zd\n", a);
-		mpz_set ( y, a);
-		square_and_multiply ( y, n, H);
+	}while ( !mpz_cmp_ui ( mod, 0));		
+} 
 
-		mpz_add_ui ( _mod, y, 1);
-		mpz_mod ( _mod, _mod, n);
-		gmp_printf ( "\t y = %Zd mod %Zd / -1 mod n =  %Zd\n", y, n, _mod);
-		if ( mpz_cmp_si ( y, 1) && mpz_cmp_ui (_mod, 0))	{
+int exception_case ( mpz_t n)	{
+
+	if ( !mpz_cmp_ui ( n, 0)) return 0;
+	if ( !mpz_cmp_ui ( n, 1)) return 1;
+	if ( !mpz_cmp_ui ( n, 2)) return 2;
+	return 3;
+}
+
+int miller_rabin_test ( mpz_t n, int k)	{
+
+	int bool = 1;
+	mpz_t s, t, y, a, mod, j;
+	mpz_inits ( s, t, y, a, mod, j, (mpz_ptr)NULL);
+	
+	init_miller_rabin_test ( n, s, t);
+
+	odd_decomposition ( s, t, mod);										//gmp_printf ( "Décomposition : n - 1 = 2^(%Zd) . %Zd\n", s, t); 
+
+	char * H = mpz_get_str(NULL, 2, t);
+	for (int i = 1; i < (k+1); i++)	{									//printf ( "Pour i = %d :\n", i);
+		random_a(a, n, i, 0, 0);										//gmp_printf ( "\tNombre aléatoire : a = %Zd\n", a);
+		
+		mpz_set ( y, a);
+		square_and_multiply ( y, n, H);									//gmp_printf ( "\ty <- a^t mod n : %Zd\n", y);
+
+		mpz_add_ui ( mod, y, 1);
+		mpz_mod ( mod, mod, n);											//gmp_printf ( "\t-1 mod n : %Zd\n", mod);				
+		if ( mpz_cmp_si ( y, 1) && mpz_cmp_ui ( mod, 0))	{
 			mpz_set_ui ( j, 1);
 			bool = 1;
-			gmp_printf ( "\t Pour j = %Zd < %Zd\n", j, s);
-			while ( (mpz_cmp ( j, s) < 1) && bool)	{
-				//mpz_set ( y2, y);
-				square_and_multiply ( y, n, "10\0");				
-				gmp_printf ( "\t\t y2 = %Zd mod %Zd\n", y, n);
+			while ( (mpz_cmp ( j, s) < 1) && bool)	{					//gmp_printf ( "\tPour j = %Zd < %Zd\n", j, s);
+				square_and_multiply ( y, n, "10\0");					//gmp_printf ( "\t\ty^2 = %Zd\n", y);
 				
-				mpz_add_ui ( _mod, y, 1);
-				mpz_mod ( _mod, _mod, n);
-				gmp_printf ( "\t\t -1 mod n ? = %Zd et y = %Zd\n", _mod, y);
+				mpz_add_ui ( mod, y, 1);
+				mpz_mod ( mod, mod, n);									//gmp_printf ( "1 mod n : %Zd / -1 mod n : %Zd\n", y, mod);
 				if ( !mpz_cmp_ui ( y, 1))	{
-					mpz_clears ( s, t, y, a, mod, j, s_1, y2, (mpz_ptr)NULL);
+					mpz_clears ( s, t, y, a, mod, j, (mpz_ptr)NULL);
 					return 0;
 				}
-				if ( !mpz_cmp_ui ( _mod, 0)) bool = 0;
+				if ( !mpz_cmp_ui ( mod, 0)) bool = 0;
 				mpz_add_ui ( j, j, 1); 
 			} 
 			if ( bool)	{
-				mpz_clears ( s, t, y, a, mod, j, s_1, y2, (mpz_ptr)NULL);
+				mpz_clears ( s, t, y, a, mod, j, (mpz_ptr)NULL);
 				return 0;
 			}
 		}
 	}
-	mpz_clears ( s, t, y, a, mod, j, s_1, y2, (mpz_ptr)NULL);
+	mpz_clears ( s, t, y, a, mod, j, (mpz_ptr)NULL);
 	return 1;
-}
-
-void fermat ( int argc, char *argv[])	{
-	//a^exp mod n
-	// Initialisation des variables
-	mpz_t n;
-	//mpz_init_set_str(a, "15", 10);
-	//mpz_init_set_str(exp, "532", 10);
-	mpz_init_set_str(n, argv[1], 10);
-
-	//random_a(n, a);
-	// Conversion de l'exposant en binaire
-	//char * H = mpz_get_str(NULL, 2, exp);
-
-	// Square and multiply
-	//square_and_multiply(a, n, H);
-
-	// 
-	//gmp_printf("%Zd\n", a);
-	//if(fermat_test(n, atoi(argv[2])) == 1)
-	//		printf("Oui premier\n");
-	//else	printf("Non\n");
-	// Free memory
-	//free(H);
-	//mpz_clear(a);
-	mpz_clear(n);
-	//mpz_clear(exp);	
 }
 
 void checkargs (int argc, int arg_n){
@@ -192,59 +176,82 @@ void checkargs (int argc, int arg_n){
 	}
 }
 
-int main(int argc, char const *argv[])	{	
-	// Initialiser n
+void Fermat ( int argc, char const * argv[])	{
+	checkargs(argc, 4);
 	mpz_t n;
+	mpz_init_set_str ( n, argv[2], 10);
+	fermat_test(n, atoi(argv[3]));
+	mpz_clear(n);	
+}
+
+void Miller_Rabin ( int argc, char const * argv[])	{
+	checkargs(argc, 4);
+	mpz_t n;
+	mpz_init_set_str ( n, argv[2], 10);
+	switch ( exception_case ( n))	{
+		case 0:
+		case 1:
+			gmp_printf ("%Zd : Ni premier, ni composé ! \n", n);
+			break;
+		case 2:
+			gmp_printf ("%Zd : Premier\n", n);
+			break;
+		case 3:
+			printf ("%s : %s\n", 
+						argv[2], 
+						miller_rabin_test ( n, atoi ( argv[3])) ? "Premier\0" : "Composé\0");	
+
+			break;
+	}
+	mpz_clear(n);
+}
+
+void Square_And_Multiply ( int argc, char const *argv[])	{
+	checkargs(argc, 5);
+	// Initialiser n
+	mpz_t n, exp, modulo;
 	// Lire n
 	mpz_init_set_str ( n, argv[2], 10);
+	mpz_init_set_str ( exp, argv[3], 10);
+	mpz_init_set_str ( modulo, argv[4], 10);
+	
+	// Conversion de l'exposant en binaire
+	char * H = mpz_get_str(NULL, 2, exp);	
+	square_and_multiply(n, modulo,H);
+	
+	// Afficher resultat
+	gmp_printf("Resultat : %Zd \n", n);
+	// Free memory
+	free(H);
+	mpz_clears( n, exp, modulo, NULL);	
+}
 
+void Random_Number ( int argc, char const *argv[])	{
+	checkargs(argc, 3);
+	mpz_t n, a;
+	mpz_init_set_str ( n, argv[2], 10);
+	mpz_init(a);
+	random_a(a, n, 0, 0, 0);
+	gmp_printf("Nombre aléatoire : %Zd \n", a);
+	mpz_clears ( n, a, NULL);	
+}
 
-	switch(argv[1][1]){
+int main(int argc, char const *argv[])	{	
+
+	switch(argv[1][1])	{
 		case 'f': // Test de fermat 
-			checkargs(argc, 4);
-			
-			fermat_test(n, atoi(argv[3]));
-
+			Fermat ( argc, argv);
 			break;
 		case 'm': 
-			checkargs(argc, 4);
-			printf ("%s : %s\n", 
-					argv[2], 
-					miller_rabin_test ( n, atoi ( argv[3])) ? "Premier\0" : "Composé\0");
+			Miller_Rabin ( argc, argv);
 			break;
 		case 's': 
-			checkargs(argc, 5);
-			// Initialiser n
-			mpz_t exp, modulo;
-			// Lire n
-			mpz_init_set_str ( exp, argv[3], 10);
-			mpz_init_set_str ( modulo, argv[4], 10);
-			
-			// Conversion de l'exposant en binaire
-			char * H = mpz_get_str(NULL, 2, exp);	
-			square_and_multiply(n, modulo,H);
-			
-			// Afficher resultat
-			gmp_printf("Resultat : %Zd \n", n);
-			// Free memory
-			free(H);
-			mpz_clears(exp, modulo, NULL);
+			Square_And_Multiply ( argc, argv);
 			break;
 		case 'g':
-			checkargs(argc, 3);
-			mpz_t a;
-			mpz_init(a);
-			random_a(a, n, 0, 0, 0);
-			gmp_printf("Nombre aléatoire : %Zd \n", a);
-
-			//Free memory
-			mpz_clear(a);
+			Random_Number ( argc, argv);
 			break;
-		
 		default : checkargs(argc, 6); break;
-
 	}
-
-	mpz_clear(n);
 	return 0;
 }
