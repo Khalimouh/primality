@@ -118,12 +118,24 @@ int fermat_test(mpz_t n, int k){
 	return 1; // n est probablement premier 
 }
 
+
+/*	Initialisation de l'algorithme de Miller-Rabin
+ * 	Initialise les valeurs de départ de S et de T à partir de N
+ *	\param n : le nombre à testé
+ *	\param s : exposant mis initialement a 0
+ *	\param t : facteur mis initialement à n-1
+*/
 void init_miller_rabin_test ( mpz_t n, mpz_t s, mpz_t t)	{
 
 	mpz_set_ui ( s, 0);
 	mpz_sub_ui ( t, n, 1);	
 }
 
+/*	Décomposition d'un nombre a tester sous la forme n-1 = 2^s . t
+ * 	\param s : exposant a calculer (initlament a 0)
+ *  \param t : facteur a calculer (initialement a n-1)
+ *  \param mod : valeur servant a calculer le modulo
+*/ 
 void odd_decomposition ( mpz_t s, mpz_t t, mpz_t mod)	{
 
 	do	{
@@ -136,6 +148,9 @@ void odd_decomposition ( mpz_t s, mpz_t t, mpz_t mod)	{
 /*
  *	Gérer les cas particuliers pour les nombres
  	0, 1, 2 et 3
+ * \param n : valeur a tester
+ * \return 		renvoie la valeur de n sous forme d'int
+ 				-1 dans le cas d'un nombre a tester avec le test de Fermat ou Miller-Rabin
 */
 int exception_case ( mpz_t n)	{
 
@@ -147,6 +162,12 @@ int exception_case ( mpz_t n)	{
 	return -1;
 }
 
+/*	Algorithme du Test de Miller-Rabin
+ * 	Determine si un nombre est premier avec une probabilite de 1/4^(k)
+ * 	/param n : nombre a tester
+ *  /param k : nombre de repetition du test
+ * 	/return :	1 si premier, 0 sinon
+ */
 int miller_rabin_test ( mpz_t n, int k)	{
 
 	int bool = 1;
@@ -191,6 +212,10 @@ int miller_rabin_test ( mpz_t n, int k)	{
 	return 1;
 }
 
+/*	Test le nombre d'arguments du programme
+ * 	\param argc : nombre d'arguments du programme
+ *  \param arg_n : nombre d'arguments attendus par un algorithme
+*/
 void checkargs (int argc, int arg_n){
 	if (argc != arg_n){
 		fprintf(stdout, "Liste des commandes Test de primalité:\n\n"
@@ -202,6 +227,12 @@ void checkargs (int argc, int arg_n){
 	}
 }
 
+/*	Lanceur du test de Fermat
+ * 		Algorithme appelant les differents traitements
+ * 		affichage du retour en fonction du retour du test
+ *  \param argc : nombre d'arguments du programme
+ *  \param argv : arguments du programme
+*/
 void Fermat_launcher ( int argc, char const * argv[])	{
 	checkargs(argc, 4);
 	mpz_t n;
@@ -224,6 +255,12 @@ void Fermat_launcher ( int argc, char const * argv[])	{
 	mpz_clear(n);	
 }
 
+/*	Lanceur du test de Miller-Rabin
+ * 		Algorithme appelant les differents traitements
+ * 		affichage du retour en fonction du retour du test
+ *  \param argc : nombre d'arguments du programme
+ *  \param argv : arguments du programme
+*/
 void Miller_Rabin_launcher ( int argc, char const * argv[])	{
 	checkargs(argc, 4);
 	mpz_t n;
@@ -246,6 +283,11 @@ void Miller_Rabin_launcher ( int argc, char const * argv[])	{
 	mpz_clear(n);
 }
 
+/*	Lanceur de la procedure Square and Multiply
+ * 		Calculer n^exp modulo [modulo]
+ *  \param argc : nombre d'arguments du programme
+ *  \param argv : arguments du programme
+*/
 void Square_And_Multiply_launcher ( int argc, char const *argv[])	{
 	checkargs(argc, 5);
 	// Initialiser n
@@ -266,6 +308,11 @@ void Square_And_Multiply_launcher ( int argc, char const *argv[])	{
 	mpz_clears( n, exp, modulo, NULL);	
 }
 
+/*	Lanceur de la procedure Square and Multiply
+ * 		Calculer n^exp modulo [modulo]
+ *  \param argc : nombre d'arguments du programme
+ *  \param argv : arguments du programme
+*/
 void Random_Number_launcher ( int argc, char const *argv[])	{
 	checkargs(argc, 3);
 	mpz_t n, a;
