@@ -10,9 +10,11 @@
 #endif
 
 /*
-	Algorithme Square and multiply
-	\param int x : entier x 
-	\param int n : modulo n
+ *	Algorithme Square and multiply
+ *	\param R : la base
+ *	\param n : modulo
+ *	\param H : exposant en binaire
+ * 	Calculer R = R^H modulo [n]
 */
 void square_and_multiply(mpz_t R, mpz_t n, char * H){
 	// Initialiser R
@@ -24,7 +26,7 @@ void square_and_multiply(mpz_t R, mpz_t n, char * H){
 	for (unsigned int i = 1; i < lenH; i++)	{		// Square and multiply
 		mpz_mul(R, R, R);							// R = R*R
 		mpz_mod(R, R, n);							// R = R mod n
-		if(H[i] - '0'){
+		if(H[i] - '0'){								// Verifier si Hi == 1
 			mpz_mul(R, R, Ri);						// R = R * x 
 			mpz_mod(R, R, n);						// R = R mod n
 		}
@@ -32,6 +34,14 @@ void square_and_multiply(mpz_t R, mpz_t n, char * H){
 	mpz_clear(Ri);
 }
 
+
+/*
+ *	Génerer un nombre aleatoire
+ *	\param a : Le nombre aléatoire généré
+ *	\param n : Le nombre n maximum
+ *	\param seed : une graine pour générer des nombres aléatoires différents
+ *  \param min & max : Le nombre aléatoire entre min et max.
+*/
 void random_a(mpz_t a, mpz_t n, int seed, int min, int max){
 	// Initialiser le générateur des nombres aléatoires.
 	gmp_randstate_t state;
@@ -54,6 +64,16 @@ void random_a(mpz_t a, mpz_t n, int seed, int min, int max){
 	// Free memory
 	gmp_randclear(state);
 }
+
+/*
+ *	Algorithme de Fermat
+ *	\param n : le nombre à testé
+ *	\param k : tester le nombre n, k fois.
+ *	\return : 0 si n est composé
+ 			  1 si n est probablement premier
+ 			  2 si n est pseudo-premier
+ * 	
+*/
 
 int fermat_test(mpz_t n, int k){
 	int is_pseudo_premier = 0;
@@ -113,12 +133,18 @@ void odd_decomposition ( mpz_t s, mpz_t t, mpz_t mod)	{
 	}while ( !mpz_cmp_ui ( mod, 0));		
 } 
 
+/*
+ *	Gérer les cas particuliers pour les nombres
+ 	0, 1, 2 et 3
+*/
 int exception_case ( mpz_t n)	{
 
 	if ( !mpz_cmp_ui ( n, 0)) return 0;
 	if ( !mpz_cmp_ui ( n, 1)) return 1;
 	if ( !mpz_cmp_ui ( n, 2)) return 2;
-	return 3;
+	if ( !mpz_cmp_ui ( n, 3)) return 3;
+
+	return -1;
 }
 
 int miller_rabin_test ( mpz_t n, int k)	{
@@ -176,15 +202,29 @@ void checkargs (int argc, int arg_n){
 	}
 }
 
-void Fermat ( int argc, char const * argv[])	{
+void Fermat_launcher ( int argc, char const * argv[])	{
 	checkargs(argc, 4);
 	mpz_t n;
 	mpz_init_set_str ( n, argv[2], 10);
-	fermat_test(n, atoi(argv[3]));
+	mpz_init_set_str ( n, argv[2], 10);
+	switch ( exception_case ( n))	{
+		case 0:
+		case 1:
+			gmp_printf ("%Zd : Ni premier, ni composé ! \n", n);
+			break;
+		case 2:
+			gmp_printf ("%Zd : Premier\n", n);
+			break;
+		case 3:
+			gmp_printf ("%Zd : Premier\n", n);
+			break;	
+		default : fermat_test(n, atoi(argv[3])); break;
+	}
+	
 	mpz_clear(n);	
 }
 
-void Miller_Rabin ( int argc, char const * argv[])	{
+void Miller_Rabin_launcher ( int argc, char const * argv[])	{
 	checkargs(argc, 4);
 	mpz_t n;
 	mpz_init_set_str ( n, argv[2], 10);
@@ -196,7 +236,7 @@ void Miller_Rabin ( int argc, char const * argv[])	{
 		case 2:
 			gmp_printf ("%Zd : Premier\n", n);
 			break;
-		case 3:
+		default:
 			printf ("%s : %s\n", 
 						argv[2], 
 						miller_rabin_test ( n, atoi ( argv[3])) ? "Premier\0" : "Composé\0");	
@@ -206,7 +246,7 @@ void Miller_Rabin ( int argc, char const * argv[])	{
 	mpz_clear(n);
 }
 
-void Square_And_Multiply ( int argc, char const *argv[])	{
+void Square_And_Multiply_launcher ( int argc, char const *argv[])	{
 	checkargs(argc, 5);
 	// Initialiser n
 	mpz_t n, exp, modulo;
@@ -226,7 +266,7 @@ void Square_And_Multiply ( int argc, char const *argv[])	{
 	mpz_clears( n, exp, modulo, NULL);	
 }
 
-void Random_Number ( int argc, char const *argv[])	{
+void Random_Number_launcher ( int argc, char const *argv[])	{
 	checkargs(argc, 3);
 	mpz_t n, a;
 	mpz_init_set_str ( n, argv[2], 10);
@@ -240,16 +280,16 @@ int main(int argc, char const *argv[])	{
 
 	switch(argv[1][1])	{
 		case 'f': // Test de fermat 
-			Fermat ( argc, argv);
+			Fermat_launcher ( argc, argv);
 			break;
 		case 'm': 
-			Miller_Rabin ( argc, argv);
+			Miller_Rabin_launcher ( argc, argv);
 			break;
 		case 's': 
-			Square_And_Multiply ( argc, argv);
+			Square_And_Multiply_launcher ( argc, argv);
 			break;
 		case 'g':
-			Random_Number ( argc, argv);
+			Random_Number_launcher ( argc, argv);
 			break;
 		default : checkargs(argc, 6); break;
 	}
