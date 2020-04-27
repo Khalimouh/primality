@@ -324,6 +324,7 @@ void Random_Number_launcher ( int argc, char const *argv[])	{
 }
 
 int main(int argc, char const *argv[])	{	
+	if (argc < 3) checkargs ( argc, -1);
 
 	switch(argv[1][1])	{
 		case 'f': // Test de fermat 
