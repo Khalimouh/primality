@@ -89,4 +89,3 @@ PATH=$PATH!:~/path_to_current_directory
 
 * **Mohamed Ramdane DEBIANE** - [Github Link](https://github.com/Khalimouh)
 
-Le dépôt du projet a été mis en privé afin d'éviter toute fuite de code vers un autre projet, c'est pourquoi il n'y a pas de lien des contributeurs.
