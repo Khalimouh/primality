@@ -4,8 +4,8 @@ Test de primalité basé sur les algorithmes de Fermat et de Miller-Rabin et uti
 ## Installation
 Le programme est distributé sous forme d'une archive .zip, pour executer à partir de cette archive il faut :
 ```bash
-unzip LARBI_HAMITOUCHE.zip
-cd LARBI_HAMITOUCHE/
+unzip LARBI_HAMITOUCHE_DEBIANE.zip
+cd LARBI_HAMITOUCHE_DEBIANE/
 make
 ```
 
