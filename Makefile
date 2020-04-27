@@ -19,7 +19,7 @@ run:
 	@./prim
 
 clean:
-	@rm -rf obj/*.o
+	@rm -rf obj/*.o prim src/*.o
 
 mrproper: clean
 	@rm -rf $(EXEC)
